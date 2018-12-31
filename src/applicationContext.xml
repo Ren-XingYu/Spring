@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+	    http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx
+	    http://www.springframework.org/schema/tx/spring-tx.xsd" >
+
+    <!--
+     注解开发需要引入：xmlns:context="http://www.springframework.org/schema/context"名称空间
+     http://www.springframework.org/schema/context
+     http://www.springframework.org/schema/context/spring-context.xsd 两个约束文件
+     -->
+
+    <!--
+     生命周期方法：init-method  destroy-method
+     bean的作用范围：scope
+                        singleton：默认，单例
+                        prototype：多例
+                        request：web项目中使用，将这个类存入request域中
+                        session：web项目中使用，将这个类存入session域中
+                        globalSession：web项目中使用，必须在porlet环境中使用
+     -->
+    <bean id="userService" class="x.y.spring.demo1.UserServiceImpl" init-method="setup" destroy-method="destroy">
+        <!-- 依赖注入 -->
+        <property name="name" value="xyz"/>
+    </bean>
+
+
+    <!--
+   分模块开发的时候使用-->
+    <import resource="x/y/spring/demo3/applicationContext1.xml"/>
+    <import resource="x/y/spring/transaction/transaction.xml"/>
+
+
+    <!--<bean id="car" class="x.y.spring.demo1.Car">
+        &lt;!&ndash; 构造方法注入 &ndash;&gt;
+        <constructor-arg name="name" value="BMW" />
+        <constructor-arg name="price" value="1000.0" />
+    </bean>-->
+    <!-- C名称空间注入 -->
+    <bean id="car" class="x.y.spring.demo1.Car" c:name="BMW" c:price="1000.0"/>
+
+
+    <!--<bean id="employee" class="x.y.spring.demo1.Employee">
+        &lt;!&ndash; 属性注入 &ndash;&gt;
+        <property name="name" value="abc"/>
+        <property name="car" ref="car"/>
+    </bean>-->
+    <!-- P名称空间注入 -->
+    <!--<bean id="employee" class="x.y.spring.demo1.Employee" p:name="abc" p:car-ref="car"/>-->
+
+
+    <!-- Spel属性注入 -->
+    <bean id="employee" class="x.y.spring.demo1.Employee">
+        <property name="name" value="#{'car'}"/>
+        <property name="car" value="#{car}"/>
+    </bean>
+
+    <!-- 注入数组类型 -->
+    <bean id="collectionBean" class="x.y.spring.demo1.CollectionBean">
+        <property name="arrs">
+            <list>
+                <value>abc</value>
+                <value>xyz</value>
+            </list>
+        </property>
+        <property name="lists">
+            <list>
+                <value>abc</value>
+                <value>xyz</value>
+            </list>
+        </property>
+        <property name="sets">
+            <set>
+                <value>abc</value>
+                <value>xyz</value>
+            </set>
+        </property>
+        <property name="maps">
+            <map>
+                <entry key="123" value="abc"/>
+                <entry key="456" value="xyz"/>
+            </map>
+        </property>
+    </bean>
+
+    <!-- 注解开发，配置包扫描（哪些包下的类使用IoC注解）
+        扫描类上的注解
+    -->
+    <context:component-scan base-package="x.y.spring.demo2"/>
+
+    <!--
+        在没有扫描的条件下使用属性注入的注解：Resource Value Autowired Qualifier
+        <context:annotation-config/>
+    -->
+
+    <!--<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql:///spring"/>
+        <property name="username" value="root"/>
+        <property name="password" value="root"/>
+    </bean>-->
+
+    <!-- 配置dbcp连接池 -->
+    <!--<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql:///spring"/>
+        <property name="username" value="root"/>
+        <property name="password" value="root"/>
+    </bean>-->
+
+    <!-- 配置c3p0连接池 -->
+    <!--<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver"/>
+        <property name="jdbcUrl" value="jdbc:mysql:///spring"/>
+        <property name="user" value="root"/>
+        <property name="password" value="root"/>
+    </bean>-->
+
+    <!-- 引入属性文件两种方式 -->
+    <!-- 通过一个bean标签引入，很少使用 -->
+    <!--<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:jdbc.properties"/>
+    </bean>-->
+    <!-- 通过context来引入 -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="${jdbc.driverClass}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="user" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- 编程式事务  -->
+    <!-- 配置平台事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!-- 配置事务管理的模板 -->
+    <bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
+        <property name="transactionManager" ref="transactionManager"/>
+    </bean>
+
+    <!--&lt;!&ndash; 声明式事务:配置事务增强 &ndash;&gt;
+    <tx:advice transaction-manager="transactionManager" id="txAdvice">
+        <tx:attributes>
+            &lt;!&ndash; 事务管理的规则  *:所有方法&ndash;&gt;
+            <tx:method name="*" propagation="REQUIRED"/>
+        </tx:attributes>
+    </tx:advice>
+
+    &lt;!&ndash; AOP配置 &ndash;&gt;
+    <aop:config>
+        <aop:pointcut id="pointcut1" expression="execution(* x.y.spring.transaction.AccountServiceImpl2.transfer(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="pointcut1"/>
+    </aop:config>-->
+
+
+</beans>

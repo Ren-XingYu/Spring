@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop" xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <bean id="productDao" class="x.y.spring.demo3.ProductDaoImpl"/>
+    <bean id="orderDao" class="x.y.spring.demo3.OrderDao"/>
+    <bean id="myAspect" class="x.y.spring.demo3.MyAspectXml"/>
+    <bean id="myAspectAnno" class="x.y.spring.demo3.MyAspectAnno"/>
+
+    <!-- 开启注解的AOP开发 -->
+    <aop:aspectj-autoproxy/>
+
+
+    <!-- 通过AOP配置对目标增强 -->
+    <aop:config>
+        <!-- expression:配置哪些类的哪些方法需要增强
+            execution中切入点表达式写法：
+                切入点表达式：[访问修饰符] 方法返回值 包名.类名.方法名(参数)
+                * 代表任意类型
+                + 当前类和其子类
+            public void x.y.sprint.CustomerDemo+.save(..)
+            * x.y.spring..*.*(..)   spring包及其子包下的所有类的所有方法
+            * *.*.*.*Dao.save(..)
+        -->
+        <aop:pointcut id="pointcut1" expression="execution(* x.y.spring.demo3.ProductDaoImpl.save(..))"/>
+        <aop:pointcut id="pointcut2" expression="execution(* x.y.spring.demo3.ProductDaoImpl.delete(..))"/>
+        <aop:pointcut id="pointcut3" expression="execution(* x.y.spring.demo3.ProductDaoImpl.update(..))"/>
+        <aop:pointcut id="pointcut4" expression="execution(* x.y.spring.demo3.ProductDaoImpl.find(..))"/>
+        <!-- 配置切面 -->
+        <aop:aspect ref="myAspect">
+            <aop:before method="checkPri" pointcut-ref="pointcut1"/>
+            <aop:after-returning method="writeLog" pointcut-ref="pointcut2" returning="result"/>
+            <aop:around method="around" pointcut-ref="pointcut3"/>
+            <aop:after-throwing method="afterThrowing" pointcut-ref="pointcut4" throwing="ex"/>
+            <aop:after method="after" pointcut-ref="pointcut4"/>
+        </aop:aspect>
+    </aop:config>
+</beans>
